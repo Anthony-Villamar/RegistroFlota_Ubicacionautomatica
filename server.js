@@ -4,41 +4,98 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const path = require('path');
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Aquí debe estar tu index.html, chofer.html, etc.
 
-// Conexión a MySQL
+// Mostrar login al acceder a la raíz
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/style', express.static(path.join(__dirname, 'style')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+
+// Conexión a base de datos
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '', // tu contraseña
-  database: 'flota'
+  password: '',
+  database: 'flota1'
 });
 
-// ✅ Registrar chofer o devolver su ID si ya existe
-app.post('/api/choferes', (req, res) => {
-  const { nombre, placa } = req.body;
+// Endpoint para login
+app.post('/api/login', (req, res) => {
+  const { usuario, password } = req.body;
 
-  // Buscar por placa si ya existe
+  db.query('SELECT * FROM admin WHERE usuario = ? AND password = ?', [usuario, password], (err, adminRows) => {
+    if (err) return res.status(500).send(err);
+    if (adminRows.length > 0) return res.json({ rol: 'admin' });
+
+    db.query('SELECT * FROM choferes WHERE placa = ? AND password = ?', [usuario, password], (err, choferRows) => {
+      if (err) return res.status(500).send(err);
+      if (choferRows.length > 0) {
+        return res.json({ rol: 'chofer', id: choferRows[0].id });
+      }
+
+      res.status(401).json({ error: 'Credenciales inválidas' });
+    });
+  });
+});
+
+// Endpoint para registrar chofer
+app.post('/api/choferes', (req, res) => {
+  const { nombre, placa, password } = req.body;
+
   db.query('SELECT id FROM choferes WHERE placa = ?', [placa], (err, rows) => {
     if (err) return res.status(500).send(err);
 
     if (rows.length > 0) {
-      // Ya existe, devolver su ID
       return res.json({ id: rows[0].id });
     } else {
-      // No existe, lo insertamos
-      db.query('INSERT INTO choferes (nombre, placa) VALUES (?, ?)', [nombre, placa], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ id: result.insertId });
-      });
+      db.query(
+        'INSERT INTO choferes (nombre, placa, password) VALUES (?, ?, ?)',
+        [nombre, placa, password],
+        (err, result) => {
+          if (err) return res.status(500).send(err);
+          res.json({ id: result.insertId });
+        }
+      );
     }
   });
 });
 
-// ✅ Registrar paso por base (ubicación)
+// Lista de todos los choferes con contador de registros
+app.get('/api/choferes', (req, res) => {
+  const query = `
+    SELECT c.id, c.nombre, c.placa, COUNT(r.id) AS registros
+    FROM choferes c
+    LEFT JOIN registros r ON c.id = r.chofer_id
+    GROUP BY c.id
+  `;
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+});
+
+// Detalles de un chofer
+app.get('/api/choferes/:id', (req, res) => {
+  const id = req.params.id;
+
+  db.query('SELECT * FROM choferes WHERE id = ?', [id], (err, choferRows) => {
+    if (err) return res.status(500).send(err);
+    if (choferRows.length === 0) return res.status(404).json({ error: 'Chofer no encontrado' });
+
+    db.query('SELECT latitud, longitud, fecha FROM registros WHERE chofer_id = ?', [id], (err, registros) => {
+      if (err) return res.status(500).send(err);
+      res.json({ chofer: choferRows[0], registros });
+    });
+  });
+});
+
+
+
+// Para registrar ubicación
 app.post('/api/registros', (req, res) => {
   const { choferId, lat, lng } = req.body;
   db.query(
@@ -51,40 +108,6 @@ app.post('/api/registros', (req, res) => {
     }
   );
 });
-
-// ✅ Obtener lista de choferes con conteo de registros
-app.get('/api/choferes', (req, res) => {
-  db.query(`
-    SELECT c.id, c.nombre, c.placa, COUNT(r.id) as registros
-    FROM choferes c
-    LEFT JOIN registros r ON c.id = r.chofer_id
-    GROUP BY c.id
-  `, (err, rows) => {
-    if (err) return res.status(500).send(err);
-    res.json(rows);
-  });
-});
-
-// ✅ Obtener chofer y sus registros por ID
-app.get('/api/choferes/:id', (req, res) => {
-  const choferId = req.params.id;
-
-  db.query('SELECT * FROM choferes WHERE id = ?', [choferId], (err, choferRows) => {
-    if (err) return res.status(500).send(err);
-    if (choferRows.length === 0) return res.status(404).send({ error: 'Chofer no encontrado' });
-
-    db.query('SELECT latitud, longitud, fecha FROM registros WHERE chofer_id = ?', [choferId], (err, registros) => {
-      if (err) return res.status(500).send(err);
-
-      res.json({ chofer: choferRows[0], registros });
-    });
-  });
-});
-
-// Iniciar el servidor
-// app.listen(3000, () => {
-//   console.log('✅ Servidor corriendo en http://localhost:3000');
-// });
-// Iniciar el servidor
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));

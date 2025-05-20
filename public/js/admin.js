@@ -1,52 +1,46 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  const cont = document.getElementById('listaChoferes');
-  cont.innerHTML = 'Cargando choferes...';
+window.onload = function () {
+  fetch('/api/choferes')
+    .then(res => res.json())
+    .then(choferes => {
+      const tbody = document.querySelector('#tablaChoferes tbody');
+      tbody.innerHTML = '';
+      choferes.forEach(chofer => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${chofer.id}</td>
+          <td>${chofer.nombre}</td>
+          <td>${chofer.placa}</td>
+          <td>${chofer.registros}</td>
+          <td><button onclick="verDetalles(${chofer.id})">Detalles</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(err => console.error('Error al obtener choferes:', err));
+};
 
-  try {
-    const res = await fetch('/api/choferes');
-    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-    const data = await res.json();
+function verDetalles(choferId) {
+  fetch(`/api/choferes/${choferId}`)
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector('#tablaRegistros tbody');
+      tbody.innerHTML = '';
 
-    if (data.length === 0) {
-      cont.innerHTML = '<p>No hay choferes registrados.</p>';
-      return;
-    }
+      if (!data.registros || data.registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">Sin registros</td></tr>';
+        return;
+      }
 
-    cont.innerHTML = '';
-    data.forEach(chofer => {
-      cont.innerHTML += `
-        <div style="margin-bottom:15px;">
-          <h3>${chofer.nombre} (${chofer.placa})</h3>
-          <p>Bases registradas: ${chofer.registros}</p>
-          <button onclick="mostrarDetallesChofer(${chofer.id})">Ver detalles</button>
-        </div>
-      `;
-    });
-  } catch (e) {
-    cont.innerHTML = `<p>Error al cargar choferes: ${e.message}</p>`;
-  }
-});
-
-const detallesDiv = document.getElementById('detallesRegistros');
-
-async function mostrarDetallesChofer(choferId) {
-  detallesDiv.innerHTML = 'Cargando detalles...';
-  try {
-    const res = await fetch(`/api/choferes/${choferId}`);
-    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-    const data = await res.json();
-
-    if (!data.registros || data.registros.length === 0) {
-      detallesDiv.innerHTML = '<p>No hay registros para este chofer.</p>';
-      return;
-    }
-
-    detallesDiv.innerHTML = `<h2>Detalles de ${data.chofer.nombre} (${data.chofer.placa})</h2>`;
-    detallesDiv.innerHTML += data.registros.map(r =>
-      `<p>📍 Fecha: ${new Date(r.fecha).toLocaleString()}<br>
-       Ubicación: <a href="https://www.google.com/maps?q=${r.latitud},${r.longitud}" target="_blank" rel="noopener noreferrer">Ver mapa</a></p>`
-    ).join('');
-  } catch (e) {
-    detallesDiv.innerHTML = `<p>Error al cargar detalles: ${e.message}</p>`;
-  }
+      data.registros.forEach(r => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td>${r.latitud}</td>
+          <td>${r.longitud}</td>
+          <td>${new Date(r.fecha).toLocaleString()}</td>
+          <td><a href="https://www.google.com/maps?q=${r.latitud},${r.longitud}" target="_blank">Ver</a></td>
+        `;
+        tbody.appendChild(fila);
+      });
+    })
+    .catch(err => console.error('Error al obtener detalles:', err));
 }

@@ -29,7 +29,7 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
     }
 
     // Si todo ok, guardar ID y redirigir
-    localStorage.setItem('choferId', choferId);
+    sessionStorage.setItem('choferId', choferId);
     mensaje.style.color = 'green';
     mensaje.textContent = `Registro exitoso. Redirigiendo...`;
 
