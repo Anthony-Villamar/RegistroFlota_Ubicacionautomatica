@@ -17,6 +17,27 @@ window.onload = function () {
       });
     })
     .catch(err => console.error('Error al obtener choferes:', err));
+
+
+    document.getElementById('formBase').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nombre = document.getElementById('nombreBase').value;
+    const lat = parseFloat(document.getElementById('latitudBase').value);
+    const lng = parseFloat(document.getElementById('longitudBase').value);
+
+    const res = await fetch('/api/bases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, lat, lng })
+    });
+
+    const data = await res.json();
+    document.getElementById('mensajeBase').textContent = data.message || 'Base registrada con éxito';
+
+    // Limpia campos
+    document.getElementById('formBase').reset();
+  });
+
 };
 
 function verDetalles(choferId) {

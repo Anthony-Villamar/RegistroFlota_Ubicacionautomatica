@@ -1,28 +1,50 @@
-<h2>Choferes registrados</h2>
-<table id="tablaChoferes" border="1">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Nombre</th>
-      <th>Placa</th>
-      <th>Registros</th>
-      <th>Detalles</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <h2>Registrar nueva base</h2>
+  <form id="formBase">
+    <input type="text" id="nombreBase" placeholder="Nombre de la base" required />
+    <input type="number" id="latitudBase" placeholder="Latitud" step="any" required />
+    <input type="number" id="longitudBase" placeholder="Longitud" step="any" required />
+    <button type="submit">Guardar base</button>
+  </form>
+  <div id="mensajeBase" style="color: green; margin-top: 10px;"></div>
 
-<h3>Detalles del chofer</h3>
-<table id="tablaRegistros" border="1">
-  <thead>
-    <tr>
-      <th>Latitud</th>
-      <th>Longitud</th>
-      <th>Fecha</th>
-      <th>Mapa</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
 
-<script src="/js/admin.js"></script>
+  <h2>Choferes registrados</h2>
+  <table id="tablaChoferes" border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Placa</th>
+        <th>Registros</th>
+        <th>Detalles</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  
+  <h3>Detalles del chofer</h3>
+  <table id="tablaRegistros" border="1">
+    <thead>
+      <tr>
+        <th>Latitud</th>
+        <th>Longitud</th>
+        <th>Fecha</th>
+        <th>Mapa</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  
+  <script src="/js/admin.js"></script>
+  
+</body>
+</html>
+

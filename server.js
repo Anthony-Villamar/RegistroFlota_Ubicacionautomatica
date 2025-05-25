@@ -97,6 +97,7 @@ app.get('/api/choferes/:id', (req, res) => {
 
 // Para registrar ubicación
 app.post('/api/registros', (req, res) => {
+    console.log('Datos recibidos en POST /api/registros:', req.body);
   const { choferId, lat, lng } = req.body;
   db.query(
     'INSERT INTO registros (chofer_id, latitud, longitud) VALUES (?, ?, ?)',
@@ -108,6 +109,26 @@ app.post('/api/registros', (req, res) => {
     }
   );
 });
+
+// Registrar nueva base
+app.post('/api/bases', (req, res) => {
+  const { nombre, lat, lng } = req.body;
+  db.query('INSERT INTO bases (nombre, latitud, longitud) VALUES (?, ?, ?)', [nombre, lat, lng], (err) => {
+    if (err) return res.status(500).send(err);
+    res.json({ message: 'Base registrada correctamente' });
+  });
+});
+
+// Obtener todas las bases
+app.get('/api/bases', (req, res) => {
+  db.query('SELECT * FROM bases', (err, rows) => {
+    if (err) return res.status(500).send(err);
+    res.json(rows);
+  });
+});
+
+
+
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));
