@@ -98,10 +98,10 @@ app.get('/api/choferes/:id', (req, res) => {
 // Para registrar ubicación
 app.post('/api/registros', (req, res) => {
     console.log('Datos recibidos en POST /api/registros:', req.body);
-  const { choferId, lat, lng } = req.body;
+  const { choferId, lat, lng, nombreBase  } = req.body;
   db.query(
-    'INSERT INTO registros (chofer_id, latitud, longitud) VALUES (?, ?, ?)',
-    [choferId, lat, lng],
+    'INSERT INTO registros (chofer_id, base_nombre, latitud, longitud) VALUES (?, ?, ?, ?)',
+    [choferId, nombreBase , lat, lng],
     (err) => {
       if (err) return res.status(500).send(err);
       const qr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Chofer:${choferId}|${lat},${lng}`;
